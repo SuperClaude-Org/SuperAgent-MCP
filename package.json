@@ -1,0 +1,25 @@
+{
+  "name": "superagent-mcp",
+  "version": "0.1.0",
+  "description": "SuperAgent MCP server for orchestrating Codex agent calls with concurrency",
+  "type": "module",
+  "main": "dist/server.js",
+  "bin": {
+    "superagent-mcp": "dist/server.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "dev": "ts-node src/server.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.18.0",
+    "zod": "^3.23.8",
+    "zod-to-json-schema": "^3.23.5"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  }
+}
