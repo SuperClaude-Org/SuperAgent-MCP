@@ -1,6 +1,7 @@
 import { BatchInvokeInput, AgentInvocationResult, AgentPromptInput } from "./types.js";
 import { invokeCodex, CodexInvocationError } from "./codexAgent.js";
 import { invokeGemini, GeminiInvocationError } from "./geminiAgent.js";
+import { getAgent } from "./agentLoader.js";
 import { z } from "zod";
 
 // Type for the base schema without agentEnv
@@ -46,17 +47,27 @@ export async function runCodexBatch(input: BaseInvokeInput): Promise<AgentInvoca
 
   return runWithConcurrency(input.prompts, concurrency, async (prompt) => {
     try {
+      // Load agent system prompt if specified
+      let agentSystemPrompt: string | undefined;
+      if (prompt.agent) {
+        const agent = getAgent(prompt.agent);
+        if (agent) {
+          agentSystemPrompt = agent.systemPrompt;
+        }
+      }
+
       const result = await invokeCodex({
         prompt: prompt.prompt,
+        agentSystemPrompt,
         extraArgs: prompt.extraArgs,
         timeoutMs: prompt.timeoutMs,
         workingDirectory: prompt.workingDirectory
       });
       return {
         status: "ok",
-        task: prompt.task,
+        agent: prompt.agent,
         prompt: prompt.prompt,
-        agent: "codex",
+        tool: "codex",
         response: result.assistantReply || result.stdout,
         exitCode: result.exitCode,
         durationMs: result.durationMs,
@@ -68,9 +79,9 @@ export async function runCodexBatch(input: BaseInvokeInput): Promise<AgentInvoca
       if (error instanceof CodexInvocationError) {
         return {
           status: "error",
-          task: prompt.task,
+          agent: prompt.agent,
           prompt: prompt.prompt,
-          agent: "codex",
+          tool: "codex",
           error: error.message,
           exitCode: error.exitCode,
           rawOutput: error.stdout,
@@ -80,9 +91,9 @@ export async function runCodexBatch(input: BaseInvokeInput): Promise<AgentInvoca
 
       return {
         status: "error",
-        task: prompt.task,
+        agent: prompt.agent,
         prompt: prompt.prompt,
-        agent: "codex",
+        tool: "codex",
         error: error instanceof Error ? error.message : String(error)
       } satisfies AgentInvocationResult;
     }
@@ -95,16 +106,26 @@ export async function runGeminiBatch(input: BaseInvokeInput): Promise<AgentInvoc
 
   return runWithConcurrency(input.prompts, concurrency, async (prompt) => {
     try {
+      // Load agent system prompt if specified
+      let agentSystemPrompt: string | undefined;
+      if (prompt.agent) {
+        const agent = getAgent(prompt.agent);
+        if (agent) {
+          agentSystemPrompt = agent.systemPrompt;
+        }
+      }
+
       const result = await invokeGemini({
         prompt: prompt.prompt,
+        agentSystemPrompt,
         timeoutMs: prompt.timeoutMs,
         workingDirectory: prompt.workingDirectory
       });
       return {
         status: "ok",
-        task: prompt.task,
+        agent: prompt.agent,
         prompt: prompt.prompt,
-        agent: "gemini",
+        tool: "gemini",
         response: result.response,
         exitCode: result.exitCode,
         durationMs: result.durationMs,
@@ -116,9 +137,9 @@ export async function runGeminiBatch(input: BaseInvokeInput): Promise<AgentInvoc
       if (error instanceof GeminiInvocationError) {
         return {
           status: "error",
-          task: prompt.task,
+          agent: prompt.agent,
           prompt: prompt.prompt,
-          agent: "gemini",
+          tool: "gemini",
           error: error.message,
           exitCode: error.exitCode,
           rawOutput: error.stdout,
@@ -128,9 +149,9 @@ export async function runGeminiBatch(input: BaseInvokeInput): Promise<AgentInvoc
 
       return {
         status: "error",
-        task: prompt.task,
+        agent: prompt.agent,
         prompt: prompt.prompt,
-        agent: "gemini",
+        tool: "gemini",
         error: error instanceof Error ? error.message : String(error)
       } satisfies AgentInvocationResult;
     }
@@ -181,9 +202,9 @@ export async function runBatch(input: BatchInvokeInput): Promise<AgentInvocation
 
       return {
         status: "ok",
-        task: prompt.task,
+        agent: prompt.agent,
         prompt: prompt.prompt,
-        agent: agent.agentName,
+        tool: agent.agentName as "codex" | "gemini",
         response: response,
         exitCode: result.exitCode,
         durationMs: result.durationMs,
@@ -199,9 +220,9 @@ export async function runBatch(input: BatchInvokeInput): Promise<AgentInvocation
         const invocationError = error as CodexInvocationError | GeminiInvocationError;
         return {
           status: "error",
-          task: prompt.task,
+          agent: prompt.agent,
           prompt: prompt.prompt,
-          agent: agent.agentName,
+          tool: agent.agentName as "codex" | "gemini",
           error: invocationError.message,
           exitCode: invocationError.exitCode,
           rawOutput: invocationError.stdout,
@@ -211,9 +232,9 @@ export async function runBatch(input: BatchInvokeInput): Promise<AgentInvocation
 
       return {
         status: "error",
-        task: prompt.task,
+        agent: prompt.agent,
         prompt: prompt.prompt,
-        agent: agent.agentName,
+        tool: agent.agentName as "codex" | "gemini",
         error: error instanceof Error ? error.message : String(error)
       } satisfies AgentInvocationResult;
     }

@@ -3,7 +3,7 @@ import { z } from "zod";
 export const AgentIdentifierSchema = z.string().min(1).max(64);
 
 export const AgentPromptSchema = z.object({
-  task: AgentIdentifierSchema.optional().describe("Task identifier for tracking this prompt"),
+  agent: z.string().optional().describe("Name of specialized agent to use (e.g., 'backend-architect', 'python-expert')"),
   prompt: z.string().min(1, "prompt must not be empty").describe("The prompt to send to the agent"),
   extraArgs: z.array(z.string()).optional().describe("Additional CLI arguments (Codex only)"),
   timeoutMs: z.number().int().positive().max(60 * 60 * 1000).optional().describe("Timeout in milliseconds (default: 30 min, max: 60 min)"),
@@ -45,9 +45,9 @@ export type BatchInvokeInput = z.infer<typeof BatchInvokeSchema>;
 
 export interface AgentInvocationSuccess {
   status: "ok";
-  task?: string;
+  agent?: string;
   prompt: string;
-  agent: string;
+  tool: string;
   response: string;
   exitCode: number;
   durationMs: number;
@@ -58,9 +58,9 @@ export interface AgentInvocationSuccess {
 
 export interface AgentInvocationErrorResult {
   status: "error";
-  task?: string;
+  agent?: string;
   prompt: string;
-  agent: string;
+  tool: string;
   error: string;
   exitCode?: number;
   rawOutput?: string;

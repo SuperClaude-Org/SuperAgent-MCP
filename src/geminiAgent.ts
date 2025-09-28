@@ -3,6 +3,7 @@ import { once } from "node:events";
 
 export interface GeminiInvocationOptions {
   prompt: string;
+  agentSystemPrompt?: string;
   timeoutMs?: number;
   workingDirectory?: string;
   includeRawEvents?: boolean;
@@ -49,8 +50,11 @@ User request: `;
 function buildArgs(options: GeminiInvocationOptions): string[] {
   const args: string[] = [];
 
-  // Add the prompt as positional argument with meta instruction
-  args.push(META_INSTRUCTION + options.prompt);
+  // Build full prompt with proper hierarchy
+  const fullPrompt = META_INSTRUCTION +
+    (options.agentSystemPrompt ? options.agentSystemPrompt + "\n\nUser request:\n" : "") +
+    options.prompt;
+  args.push(fullPrompt);
 
   // Add output format for structured response
   args.push("--output-format", "json");

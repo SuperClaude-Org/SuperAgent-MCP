@@ -3,6 +3,7 @@ import { once } from "node:events";
 
 export interface CodexInvocationOptions {
   prompt: string;
+  agentSystemPrompt?: string;
   extraArgs?: string[];
   timeoutMs?: number;
   workingDirectory?: string;
@@ -175,8 +176,10 @@ export async function invokeCodex(options: CodexInvocationOptions): Promise<Code
   child.stdout.on("data", (chunk) => stdoutChunks.push(Buffer.from(chunk)));
   child.stderr.on("data", (chunk) => stderrChunks.push(Buffer.from(chunk)));
 
-  // Add meta instruction before user prompt
-  const fullPrompt = META_INSTRUCTION + options.prompt;
+  // Build full prompt with proper hierarchy
+  const fullPrompt = META_INSTRUCTION +
+    (options.agentSystemPrompt ? options.agentSystemPrompt + "\n\nUser request:\n" : "") +
+    options.prompt;
   child.stdin.write(fullPrompt);
   child.stdin.end();
 

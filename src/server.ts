@@ -9,7 +9,9 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 import { CodexInvokeSchema, GeminiInvokeSchema } from "./types.js";
 import { runCodexBatch, runGeminiBatch } from "./runner.js";
+import { formatAgentsForDescription, ensureAgentsDirectory, loadAgents } from "./agentLoader.js";
 import { zodToJsonSchema } from "zod-to-json-schema";
+import { z } from "zod";
 
 // Color codes for tasks (1-16)
 const TASK_COLORS = [
@@ -35,17 +37,30 @@ const RESET_COLOR = '\x1b[0m';
 const CODEX_TOOL = "codex";
 const GEMINI_TOOL = "gemini";
 
-const codexToolDefinition: Tool = {
-  name: CODEX_TOOL,
-  description: "Run Codex CLI agent with parallel execution. Supports multiple prompts concurrently. Use 'workingDirectory' to access different project folders. Codex has full system access.",
-  inputSchema: zodToJsonSchema(CodexInvokeSchema) as Tool["inputSchema"]
-};
+// Dynamically create tool definitions with available agents
+const LIST_AGENTS_TOOL = "list-agents";
 
-const geminiToolDefinition: Tool = {
-  name: GEMINI_TOOL,
-  description: "Run Gemini CLI agent with parallel execution. Supports multiple prompts concurrently. Use 'workingDirectory' to access different project folders. Auto-approves all actions (YOLO mode).",
-  inputSchema: zodToJsonSchema(GeminiInvokeSchema) as Tool["inputSchema"]
-};
+function createToolDefinitions(): { codex: Tool, gemini: Tool, listAgents: Tool } {
+  const agentsList = formatAgentsForDescription();
+
+  return {
+    codex: {
+      name: CODEX_TOOL,
+      description: "Run Codex CLI agent with parallel execution. Supports multiple prompts concurrently. Use 'workingDirectory' to access different project folders. Codex has full system access. Use 'agent' parameter to invoke a specific agent (run 'list-agents' to see available agents).",
+      inputSchema: zodToJsonSchema(CodexInvokeSchema) as Tool["inputSchema"]
+    },
+    gemini: {
+      name: GEMINI_TOOL,
+      description: "Run Gemini CLI agent with parallel execution. Supports multiple prompts concurrently. Use 'workingDirectory' to access different project folders. Auto-approves all actions (YOLO mode). Use 'agent' parameter to invoke a specific agent (run 'list-agents' to see available agents).",
+      inputSchema: zodToJsonSchema(GeminiInvokeSchema) as Tool["inputSchema"]
+    },
+    listAgents: {
+      name: LIST_AGENTS_TOOL,
+      description: "List all available specialized agents for use with codex and gemini tools" + agentsList,
+      inputSchema: zodToJsonSchema(z.object({})) as Tool["inputSchema"]
+    }
+  };
+}
 
 const server = new Server(
   {
@@ -60,14 +75,33 @@ const server = new Server(
 );
 
 // @ts-expect-error MCP SDK type mismatch
-server.setRequestHandler(ListToolsRequestSchema, async () => ({
-  tools: [codexToolDefinition, geminiToolDefinition]
-}));
+server.setRequestHandler(ListToolsRequestSchema, async () => {
+  const tools = createToolDefinitions();
+  return {
+    tools: [tools.codex, tools.gemini, tools.listAgents]
+  };
+});
 
 // @ts-expect-error MCP SDK type mismatch
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   // @ts-expect-error
   const { name: toolName, arguments: args = {} } = request.params;
+
+  if (toolName === LIST_AGENTS_TOOL) {
+    const agents = loadAgents();
+    const agentList = agents
+      .map(a => `• ${a.name}: ${a.description}`)
+      .join('\n');
+
+    return {
+      content: [
+        {
+          type: "text",
+          text: `Available specialized agents:\n\n${agentList}\n\nUse any of these agents with the 'agent' parameter in codex or gemini tools.`
+        } satisfies TextContent
+      ]
+    };
+  }
 
   if (toolName === CODEX_TOOL) {
     const parsed = CodexInvokeSchema.parse(args);
@@ -83,7 +117,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     for (let i = 0; i < results.length; i++) {
       const result = results[i];
       const taskColor = TASK_COLORS[i % TASK_COLORS.length];
-      const taskName = result.task || `Task-${i + 1}`;
+      const taskName = result.agent || `Task-${i + 1}`;
 
       if (result.status === "ok") {
         resultParts.push(`${taskColor}━━━ Task: ${taskName} ━━━${RESET_COLOR}`);
@@ -139,7 +173,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     for (let i = 0; i < results.length; i++) {
       const result = results[i];
       const taskColor = TASK_COLORS[i % TASK_COLORS.length];
-      const taskName = result.task || `Task-${i + 1}`;
+      const taskName = result.agent || `Task-${i + 1}`;
 
       if (result.status === "ok") {
         resultParts.push(`${taskColor}━━━ Task: ${taskName} ━━━${RESET_COLOR}`);
@@ -195,6 +229,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 });
 
 async function main() {
+  // Ensure agents directory exists
+  ensureAgentsDirectory();
+
   const transport = new StdioServerTransport();
   await server.connect(transport);
   console.error("SuperAgent MCP server ready (Codex & Gemini)");
