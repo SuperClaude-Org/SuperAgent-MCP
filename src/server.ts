@@ -13,18 +13,18 @@ import { zodToJsonSchema } from "zod-to-json-schema";
 
 // Color codes for tasks (1-16)
 const TASK_COLORS = [
-  '\x1b[31m', // 1: Red
-  '\x1b[34m', // 2: Blue
-  '\x1b[32m', // 3: Green
-  '\x1b[33m', // 4: Yellow
-  '\x1b[35m', // 5: Magenta
-  '\x1b[36m', // 6: Cyan
-  '\x1b[91m', // 7: Bright Red
-  '\x1b[94m', // 8: Bright Blue
-  '\x1b[92m', // 9: Bright Green
-  '\x1b[93m', // 10: Bright Yellow
-  '\x1b[95m', // 11: Bright Magenta
-  '\x1b[96m', // 12: Bright Cyan
+  '\x1b[34m', // 1: Blue
+  '\x1b[32m', // 2: Green
+  '\x1b[33m', // 3: Yellow
+  '\x1b[35m', // 4: Magenta
+  '\x1b[36m', // 5: Cyan
+  '\x1b[31m', // 6: Red
+  '\x1b[94m', // 7: Bright Blue
+  '\x1b[92m', // 8: Bright Green
+  '\x1b[93m', // 9: Bright Yellow
+  '\x1b[95m', // 10: Bright Magenta
+  '\x1b[96m', // 11: Bright Cyan
+  '\x1b[91m', // 12: Bright Red
   '\x1b[90m', // 13: Bright Black (Gray)
   '\x1b[37m', // 14: White
   '\x1b[97m', // 15: Bright White
@@ -92,6 +92,19 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         if (result.response) {
           resultParts.push(`  ${result.response.split('\n').join('\n  ')}`);
         }
+
+        // Show raw output if includeRawEvents is true
+        if (result.rawOutput) {
+          resultParts.push(`\n[Raw JSON Events - First 5 lines]`);
+          const lines = result.rawOutput.split('\n').filter(l => l.trim());
+          lines.slice(0, 5).forEach(line => {
+            resultParts.push(`  ${line}`);
+          });
+          if (lines.length > 5) {
+            resultParts.push(`  ... (${lines.length - 5} more lines)`);
+          }
+        }
+
         resultParts.push(``);
       } else {
         resultParts.push(`${taskColor}━━━ Task: ${taskName} ━━━${RESET_COLOR}`);
@@ -135,6 +148,19 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         if (result.response) {
           resultParts.push(`  ${result.response.split('\n').join('\n  ')}`);
         }
+
+        // Show raw output if includeRawEvents is true
+        if (result.rawOutput) {
+          resultParts.push(`\n[Raw JSON Events - First 5 lines]`);
+          const lines = result.rawOutput.split('\n').filter(l => l.trim());
+          lines.slice(0, 5).forEach(line => {
+            resultParts.push(`  ${line}`);
+          });
+          if (lines.length > 5) {
+            resultParts.push(`  ... (${lines.length - 5} more lines)`);
+          }
+        }
+
         resultParts.push(``);
       } else {
         resultParts.push(`${taskColor}━━━ Task: ${taskName} ━━━${RESET_COLOR}`);

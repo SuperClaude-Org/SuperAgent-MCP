@@ -3,9 +3,9 @@ export const AgentIdentifierSchema = z.string().min(1).max(64);
 export const AgentPromptSchema = z.object({
     task: AgentIdentifierSchema.optional().describe("Task identifier for tracking this prompt"),
     prompt: z.string().min(1, "prompt must not be empty").describe("The prompt to send to the agent"),
-    extraArgs: z.array(z.string()).optional().describe("Additional CLI arguments to pass to the agent"),
-    timeoutMs: z.number().int().positive().max(10 * 60 * 1000).optional().describe("Timeout in milliseconds (max 10 minutes)"),
-    model: z.string().optional().describe("Model to use (e.g., 'gpt-4', 'gemini-2.5-pro')"),
+    extraArgs: z.array(z.string()).optional().describe("Additional CLI arguments (Codex only)"),
+    timeoutMs: z.number().int().positive().max(60 * 60 * 1000).optional().describe("Timeout in milliseconds (default: 30 min, max: 60 min)"),
+    // model parameter removed - not reliably supported by both agents
     workingDirectory: z.string().optional().describe("Directory path where agent should run. Use this to access different projects")
 });
 // Schema without agentEnv - base schema for both tools
@@ -17,8 +17,7 @@ const BaseInvokeSchema = z.object({
         .min(1)
         .max(10)
         .default(1)
-        .describe("Number of prompts to run in parallel (1-10, default: 1)"),
-    includeRawEvents: z.boolean().default(false).describe("Include raw output and events in response")
+        .describe("Number of prompts to run in parallel (1-10, default: 1)")
 });
 // Keep original for backward compatibility
 export const BatchInvokeSchema = z.object({

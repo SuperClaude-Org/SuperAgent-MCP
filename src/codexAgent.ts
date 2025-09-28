@@ -5,7 +5,6 @@ export interface CodexInvocationOptions {
   prompt: string;
   extraArgs?: string[];
   timeoutMs?: number;
-  model?: string;
   workingDirectory?: string;
   includeRawEvents?: boolean;
 }
@@ -37,7 +36,7 @@ export class CodexInvocationError extends Error {
   }
 }
 
-const DEFAULT_TIMEOUT_MS = 5 * 60 * 1000;
+const DEFAULT_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
 
 function buildArgs(options: CodexInvocationOptions): string[] {
   const args: string[] = [
@@ -47,9 +46,7 @@ function buildArgs(options: CodexInvocationOptions): string[] {
     "--dangerously-bypass-approvals-and-sandbox"  // Full permissions - no restrictions
   ];
 
-  if (options.model) {
-    args.push("--model", options.model);
-  }
+  // Note: model parameter removed as it's not reliably supported
 
   if (options.extraArgs && options.extraArgs.length > 0) {
     args.push(...options.extraArgs);

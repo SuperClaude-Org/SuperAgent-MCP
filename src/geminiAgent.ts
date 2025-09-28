@@ -3,7 +3,6 @@ import { once } from "node:events";
 
 export interface GeminiInvocationOptions {
   prompt: string;
-  model?: string;
   timeoutMs?: number;
   workingDirectory?: string;
   includeRawEvents?: boolean;
@@ -32,7 +31,7 @@ export class GeminiInvocationError extends Error {
   }
 }
 
-const DEFAULT_TIMEOUT_MS = 5 * 60 * 1000;
+const DEFAULT_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
 
 const META_INSTRUCTION = `You are an MCP-invoked agent. Your responses should be:
 - Concise but complete
@@ -59,11 +58,7 @@ function buildArgs(options: GeminiInvocationOptions): string[] {
   // Add YOLO mode for automatic approval of all actions
   args.push("-y");  // or "--yolo"
 
-  // Only add model if explicitly specified
-  // Otherwise let Gemini use its default model
-  if (options.model) {
-    args.push("-m", options.model);
-  }
+  // Note: model parameter removed as it's not reliably supported
 
   return args;
 }

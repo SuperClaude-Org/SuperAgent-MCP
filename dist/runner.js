@@ -38,7 +38,6 @@ export async function runCodexBatch(input) {
                 prompt: prompt.prompt,
                 extraArgs: prompt.extraArgs,
                 timeoutMs: prompt.timeoutMs,
-                model: prompt.model,
                 workingDirectory: prompt.workingDirectory
             });
             return {
@@ -49,9 +48,9 @@ export async function runCodexBatch(input) {
                 response: result.assistantReply || result.stdout,
                 exitCode: result.exitCode,
                 durationMs: result.durationMs,
-                rawEvents: input.includeRawEvents ? result.parsedEvents : undefined,
-                rawOutput: input.includeRawEvents ? result.stdout : undefined,
-                stderr: input.includeRawEvents ? result.stderr : undefined
+                rawEvents: undefined,
+                rawOutput: undefined,
+                stderr: undefined
             };
         }
         catch (error) {
@@ -85,7 +84,6 @@ export async function runGeminiBatch(input) {
             const result = await invokeGemini({
                 prompt: prompt.prompt,
                 timeoutMs: prompt.timeoutMs,
-                model: prompt.model, // Will default to gemini-2.0-flash-exp in geminiAgent
                 workingDirectory: prompt.workingDirectory
             });
             return {
@@ -96,9 +94,9 @@ export async function runGeminiBatch(input) {
                 response: result.response,
                 exitCode: result.exitCode,
                 durationMs: result.durationMs,
-                rawEvents: input.includeRawEvents ? result.stats : undefined,
-                rawOutput: input.includeRawEvents ? result.stdout : undefined,
-                stderr: input.includeRawEvents ? result.stderr : undefined
+                rawEvents: undefined,
+                rawOutput: undefined,
+                stderr: undefined
             };
         }
         catch (error) {
@@ -132,7 +130,6 @@ function resolveAgent(prompt, agentEnv) {
             run: () => invokeGemini({
                 prompt: prompt.prompt,
                 timeoutMs: prompt.timeoutMs,
-                model: prompt.model,
                 workingDirectory: prompt.workingDirectory
             })
         };
@@ -144,7 +141,6 @@ function resolveAgent(prompt, agentEnv) {
                 prompt: prompt.prompt,
                 extraArgs: prompt.extraArgs,
                 timeoutMs: prompt.timeoutMs,
-                model: prompt.model,
                 workingDirectory: prompt.workingDirectory
             })
         };
