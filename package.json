@@ -1,11 +1,11 @@
 {
-  "name": "superagent-mcp",
-  "version": "0.1.0",
+  "name": "@superclaude-org/superagent",
+  "version": "0.1.1",
   "description": "SuperAgent MCP server for orchestrating Codex agent calls with concurrency",
   "type": "module",
   "main": "dist/server.js",
   "bin": {
-    "superagent-mcp": "dist/server.js"
+    "superagent": "dist/server.js"
   },
   "scripts": {
     "build": "tsc",

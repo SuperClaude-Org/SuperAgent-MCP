@@ -13,7 +13,7 @@ Run Gemini CLI agent with parallel execution. Supports multiple prompts concurre
 ## Installation
 
 ```bash
-npm install superagent-mcp
+npm install @superclaude-org/superagent
 ```
 
 ## Usage
