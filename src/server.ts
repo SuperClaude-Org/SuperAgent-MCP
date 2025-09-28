@@ -46,12 +46,12 @@ function createToolDefinitions(): { codex: Tool, gemini: Tool, listAgents: Tool 
   return {
     codex: {
       name: CODEX_TOOL,
-      description: "Run Codex CLI agent with parallel execution. Supports multiple prompts concurrently. Use 'workingDirectory' to access different project folders. Codex has full system access. Use 'agent' parameter to invoke a specific agent (run 'list-agents' to see available agents).",
+      description: "Run Codex CLI agent with parallel execution. Supports multiple tasks concurrently. Use 'workingDirectory' to access different project folders. Codex has full system access. Use 'agent' parameter to invoke a specific agent (run 'list-agents' to see available agents).",
       inputSchema: zodToJsonSchema(CodexInvokeSchema) as Tool["inputSchema"]
     },
     gemini: {
       name: GEMINI_TOOL,
-      description: "Run Gemini CLI agent with parallel execution. Supports multiple prompts concurrently. Use 'workingDirectory' to access different project folders. Auto-approves all actions (YOLO mode). Use 'agent' parameter to invoke a specific agent (run 'list-agents' to see available agents).",
+      description: "Run Gemini CLI agent with parallel execution. Supports multiple tasks concurrently. Use 'workingDirectory' to access different project folders. Auto-approves all actions (YOLO mode). Use 'agent' parameter to invoke a specific agent (run 'list-agents' to see available agents).",
       inputSchema: zodToJsonSchema(GeminiInvokeSchema) as Tool["inputSchema"]
     },
     listAgents: {

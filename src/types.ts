@@ -13,14 +13,14 @@ export const AgentPromptSchema = z.object({
 
 // Schema without agentEnv - base schema for both tools
 const BaseInvokeSchema = z.object({
-  prompts: z.array(AgentPromptSchema).min(1, "provide at least one prompt").describe("Array of prompts to execute"),
+  inputs: z.array(AgentPromptSchema).min(1, "provide at least one input").describe("Array of inputs to execute"),
   concurrency: z
     .number()
     .int()
     .min(1)
     .max(10)
     .default(1)
-    .describe("Number of prompts to run in parallel (1-10, default: 1)")
+    .describe("Number of inputs to run in parallel (1-10, default: 1)")
 });
 
 // Keep original for backward compatibility

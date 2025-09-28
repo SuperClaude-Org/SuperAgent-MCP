@@ -1,6 +1,6 @@
 {
   "name": "@superclaude-org/superagent",
-  "version": "0.1.4",
+  "version": "0.1.6",
   "description": "SuperAgent MCP server for orchestrating Codex agent calls with concurrency",
   "type": "module",
   "main": "dist/server.js",

@@ -43,9 +43,9 @@ async function runWithConcurrency<T, R>(items: T[], limit: number, worker: (item
 
 // Function for Codex batch processing
 export async function runCodexBatch(input: BaseInvokeInput): Promise<AgentInvocationResult[]> {
-  const concurrency = Math.min(input.concurrency ?? input.prompts.length, input.prompts.length);
+  const concurrency = Math.min(input.concurrency ?? input.inputs.length, input.inputs.length);
 
-  return runWithConcurrency(input.prompts, concurrency, async (prompt) => {
+  return runWithConcurrency(input.inputs, concurrency, async (prompt) => {
     try {
       // Load agent system prompt if specified
       let agentSystemPrompt: string | undefined;
@@ -102,9 +102,9 @@ export async function runCodexBatch(input: BaseInvokeInput): Promise<AgentInvoca
 
 // Function for Gemini batch processing
 export async function runGeminiBatch(input: BaseInvokeInput): Promise<AgentInvocationResult[]> {
-  const concurrency = Math.min(input.concurrency ?? input.prompts.length, input.prompts.length);
+  const concurrency = Math.min(input.concurrency ?? input.inputs.length, input.inputs.length);
 
-  return runWithConcurrency(input.prompts, concurrency, async (prompt) => {
+  return runWithConcurrency(input.inputs, concurrency, async (prompt) => {
     try {
       // Load agent system prompt if specified
       let agentSystemPrompt: string | undefined;
