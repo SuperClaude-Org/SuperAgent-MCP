@@ -39,3 +39,5 @@ temp/
 .npm/
 .yarn/
 .pnpm-store/
+# AI agent data
+.serena/
