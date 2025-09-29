@@ -14,19 +14,7 @@ SuperAgent is a Model Context Protocol (MCP) server that bridges MCP-compatible 
 npm install @superclaude-org/superagent
 ```
 
-The postinstall script seeds any missing agent definition files under `~/.superagent/agents` so they are immediately available.
-
-## Quick Start
-1. Make sure the Codex CLI and Gemini CLI are installed on the machine where the MCP server will run.
-2. Launch the server with `npx superagent` (or add `superagent` to your MCP client's server list).
-3. In your MCP client (e.g. Claude Desktop), register the server binary and enable the tools you need.
-
-### Example Claude Desktop entry (YAML)
-```yaml
-- id: superagent
-  name: SuperAgent MCP
-  command: npx superagent
-```
+The postinstall script seeds any missing agent definition files under `~/.superagent/agents` so they are immediately 
 
 Once connected, the client will discover these tools:
 
