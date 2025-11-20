@@ -70,8 +70,12 @@ export async function invokeContinue(options: ContinueInvocationOptions): Promis
     (options.agentSystemPrompt ? options.agentSystemPrompt + "\n\nUser request:\n" : "") +
     options.prompt;
 
-  // Escape quotes in prompt for shell command
-  const escapedPrompt = fullPrompt.replace(/"/g, '\\"');
+  // Escape special characters in prompt for shell command
+  const escapedPrompt = fullPrompt
+    .replace(/\\/g, '\\\\')
+    .replace(/"/g, '\\"')
+    .replace(/\n/g, '\\n')
+    .replace(/\r/g, '\\r');
 
   // Build command string for shell execution
   const command = `cn --config "${configPath}" -p "${escapedPrompt}"`;

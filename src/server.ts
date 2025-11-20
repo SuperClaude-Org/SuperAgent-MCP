@@ -71,7 +71,7 @@ function createToolDefinitions(): { codex: Tool, gemini: Tool, continue: Tool, l
 const server = new Server(
   {
     name: "SuperAgent",
-    version: "0.1.10"
+    version: "0.1.11"
   },
   {
     capabilities: {
