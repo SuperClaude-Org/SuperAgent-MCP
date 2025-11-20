@@ -75,10 +75,11 @@ export async function invokeContinue(options: ContinueInvocationOptions): Promis
   const args = buildArgs(options);
   const start = Date.now();
 
-  const child = spawn("npx", ["@continuedev/cli", ...args], {
+  const child = spawn("cn", args, {
     cwd: options.workingDirectory ?? process.cwd(),
     env: process.env,
-    stdio: ["pipe", "pipe", "pipe"]
+    stdio: ["pipe", "pipe", "pipe"],
+    shell: true
   });
 
   const stdoutChunks: Buffer[] = [];
