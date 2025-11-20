@@ -39,6 +39,7 @@ export const BatchInvokeSchema = z.object({
 // Specific schemas for each tool
 export const CodexInvokeSchema = BaseInvokeSchema;
 export const GeminiInvokeSchema = BaseInvokeSchema;
+export const ContinueInvokeSchema = BaseInvokeSchema;
 
 export type AgentPromptInput = z.infer<typeof AgentPromptSchema>;
 export type BatchInvokeInput = z.infer<typeof BatchInvokeSchema>;

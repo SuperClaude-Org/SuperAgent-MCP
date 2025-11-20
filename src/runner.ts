@@ -1,6 +1,7 @@
 import { BatchInvokeInput, AgentInvocationResult, AgentPromptInput } from "./types.js";
 import { invokeCodex, CodexInvocationError } from "./codexAgent.js";
 import { invokeGemini, GeminiInvocationError } from "./geminiAgent.js";
+import { invokeContinue, ContinueInvocationError } from "./continueAgent.js";
 import { getAgent } from "./agentLoader.js";
 import { z } from "zod";
 
@@ -152,6 +153,64 @@ export async function runGeminiBatch(input: BaseInvokeInput): Promise<AgentInvoc
         agent: prompt.agent,
         prompt: prompt.prompt,
         tool: "gemini",
+        error: error instanceof Error ? error.message : String(error)
+      } satisfies AgentInvocationResult;
+    }
+  });
+}
+
+// Function for Continue batch processing
+export async function runContinueBatch(input: BaseInvokeInput): Promise<AgentInvocationResult[]> {
+  const concurrency = Math.min(input.concurrency ?? input.inputs.length, input.inputs.length);
+
+  return runWithConcurrency(input.inputs, concurrency, async (prompt) => {
+    try {
+      // Load agent system prompt if specified
+      let agentSystemPrompt: string | undefined;
+      if (prompt.agent) {
+        const agent = getAgent(prompt.agent);
+        if (agent) {
+          agentSystemPrompt = agent.systemPrompt;
+        }
+      }
+
+      const result = await invokeContinue({
+        prompt: prompt.prompt,
+        agentSystemPrompt,
+        timeoutMs: prompt.timeoutMs,
+        workingDirectory: prompt.workingDirectory
+      });
+      return {
+        status: "ok",
+        agent: prompt.agent,
+        prompt: prompt.prompt,
+        tool: "continue",
+        response: result.response,
+        exitCode: result.exitCode,
+        durationMs: result.durationMs,
+        rawEvents: undefined,
+        rawOutput: undefined,
+        stderr: undefined
+      } satisfies AgentInvocationResult;
+    } catch (error) {
+      if (error instanceof ContinueInvocationError) {
+        return {
+          status: "error",
+          agent: prompt.agent,
+          prompt: prompt.prompt,
+          tool: "continue",
+          error: error.message,
+          exitCode: error.exitCode,
+          rawOutput: error.stdout,
+          stderr: error.stderr
+        } satisfies AgentInvocationResult;
+      }
+
+      return {
+        status: "error",
+        agent: prompt.agent,
+        prompt: prompt.prompt,
+        tool: "continue",
         error: error instanceof Error ? error.message : String(error)
       } satisfies AgentInvocationResult;
     }
