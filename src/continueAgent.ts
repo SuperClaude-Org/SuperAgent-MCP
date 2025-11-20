@@ -75,7 +75,7 @@ export async function invokeContinue(options: ContinueInvocationOptions): Promis
   const args = buildArgs(options);
   const start = Date.now();
 
-  const child = spawn("cn", args, {
+  const child = spawn("npx", ["@continuedev/cli", ...args], {
     cwd: options.workingDirectory ?? process.cwd(),
     env: process.env,
     stdio: ["pipe", "pipe", "pipe"]
