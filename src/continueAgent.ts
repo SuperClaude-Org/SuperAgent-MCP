@@ -46,13 +46,23 @@ You are a general-purpose agent capable of:
 
 User request: `;
 
-function buildArgs(options: ContinueInvocationOptions): string[] {
-  const args: string[] = [];
+function parseContinueResponse(stdout: string): string {
+  // Continue CLI outputs plain text in headless mode
+  return stdout.trim();
+}
+
+export async function invokeContinue(options: ContinueInvocationOptions): Promise<ContinueInvocationResponse> {
+  const start = Date.now();
 
   // Get config path from environment variable
   const configPath = process.env.CONTINUE_CONFIG_PATH;
-  if (configPath) {
-    args.push("--config", configPath);
+  if (!configPath) {
+    throw new ContinueInvocationError(
+      "CONTINUE_CONFIG_PATH environment variable is required",
+      -1,
+      "",
+      "Missing CONTINUE_CONFIG_PATH environment variable"
+    );
   }
 
   // Build full prompt with proper hierarchy
@@ -60,22 +70,13 @@ function buildArgs(options: ContinueInvocationOptions): string[] {
     (options.agentSystemPrompt ? options.agentSystemPrompt + "\n\nUser request:\n" : "") +
     options.prompt;
 
-  // Add headless mode flag with prompt
-  args.push("-p", fullPrompt);
+  // Escape quotes in prompt for shell command
+  const escapedPrompt = fullPrompt.replace(/"/g, '\\"');
 
-  return args;
-}
+  // Build command string for shell execution
+  const command = `cn --config "${configPath}" -p "${escapedPrompt}"`;
 
-function parseContinueResponse(stdout: string): string {
-  // Continue CLI outputs plain text in headless mode
-  return stdout.trim();
-}
-
-export async function invokeContinue(options: ContinueInvocationOptions): Promise<ContinueInvocationResponse> {
-  const args = buildArgs(options);
-  const start = Date.now();
-
-  const child = spawn("cn", args, {
+  const child = spawn(command, [], {
     cwd: options.workingDirectory ?? process.cwd(),
     env: process.env,
     stdio: ["pipe", "pipe", "pipe"],
