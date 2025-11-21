@@ -1,6 +1,7 @@
 import { spawn } from "node:child_process";
 import { once } from "node:events";
 import { createHeartbeat } from "./heartbeat.js";
+import { registerProcess } from "./processManager.js";
 
 export interface GeminiInvocationOptions {
   prompt: string;
@@ -127,6 +128,9 @@ export async function invokeGemini(options: GeminiInvocationOptions): Promise<Ge
     env: process.env,
     stdio: ["pipe", "pipe", "pipe"]
   });
+
+  // Register process for cleanup on shutdown
+  registerProcess(child);
 
   // Start heartbeat after spawn
   heartbeat?.start();

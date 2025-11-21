@@ -1,6 +1,7 @@
 import spawn from "cross-spawn";
 import { once } from "node:events";
 import { createHeartbeat } from "./heartbeat.js";
+import { registerProcess } from "./processManager.js";
 
 export interface ContinueInvocationOptions {
   prompt: string;
@@ -95,6 +96,9 @@ export async function invokeContinue(options: ContinueInvocationOptions): Promis
     env: process.env,
     stdio: ["pipe", "pipe", "pipe"]
   });
+
+  // Register process for cleanup on shutdown
+  registerProcess(child);
 
   // Start heartbeat after spawn
   heartbeat?.start();

@@ -10,6 +10,7 @@ import {
 import { CodexInvokeSchema, GeminiInvokeSchema, ContinueInvokeSchema } from "./types.js";
 import { runCodexBatch, runGeminiBatch, runContinueBatch } from "./runner.js";
 import { formatAgentsForDescription, ensureAgentsDirectory, loadAgents } from "./agentLoader.js";
+import { setupSignalHandlers } from "./processManager.js";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { z } from "zod";
 
@@ -327,6 +328,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 });
 
 async function main() {
+  // Setup signal handlers for graceful shutdown
+  setupSignalHandlers();
+
   // Ensure agents directory exists
   ensureAgentsDirectory();
 
