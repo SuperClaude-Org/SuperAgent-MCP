@@ -1,5 +1,6 @@
 import { spawn } from "node:child_process";
 import { once } from "node:events";
+import { createHeartbeat } from "./heartbeat.js";
 
 export interface GeminiInvocationOptions {
   prompt: string;
@@ -7,6 +8,8 @@ export interface GeminiInvocationOptions {
   timeoutMs?: number;
   workingDirectory?: string;
   includeRawEvents?: boolean;
+  progressToken?: string | number;
+  mcpServer?: any;
 }
 
 export interface GeminiInvocationResponse {
@@ -110,11 +113,23 @@ export async function invokeGemini(options: GeminiInvocationOptions): Promise<Ge
   const args = buildArgs(options);
   const start = Date.now();
 
+  // Create heartbeat controller to prevent MCP timeout
+  const heartbeat = options.mcpServer && options.progressToken
+    ? createHeartbeat({
+        intervalMs: 30000,
+        progressToken: options.progressToken,
+        server: options.mcpServer
+      })
+    : null;
+
   const child = spawn("gemini", args, {
     cwd: options.workingDirectory ?? process.cwd(),
     env: process.env,
     stdio: ["pipe", "pipe", "pipe"]
   });
+
+  // Start heartbeat after spawn
+  heartbeat?.start();
 
   const stdoutChunks: Buffer[] = [];
   const stderrChunks: Buffer[] = [];
@@ -144,6 +159,9 @@ export async function invokeGemini(options: GeminiInvocationOptions): Promise<Ge
   try {
     closeResult = (await Promise.race([once(child, "close"), timeoutPromise])) as [number | null, NodeJS.Signals | null];
   } finally {
+    // Stop heartbeat
+    heartbeat?.stop();
+
     if (timeoutHandle) {
       clearTimeout(timeoutHandle);
     }

@@ -1,5 +1,6 @@
 import { spawn } from "node:child_process";
 import { once } from "node:events";
+import { createHeartbeat } from "./heartbeat.js";
 
 export interface ContinueInvocationOptions {
   prompt: string;
@@ -7,6 +8,8 @@ export interface ContinueInvocationOptions {
   timeoutMs?: number;
   workingDirectory?: string;
   includeRawEvents?: boolean;
+  progressToken?: string | number;
+  mcpServer?: any;
 }
 
 export interface ContinueInvocationResponse {
@@ -54,6 +57,15 @@ function parseContinueResponse(stdout: string): string {
 export async function invokeContinue(options: ContinueInvocationOptions): Promise<ContinueInvocationResponse> {
   const start = Date.now();
 
+  // Create heartbeat controller to prevent MCP timeout
+  const heartbeat = options.mcpServer && options.progressToken
+    ? createHeartbeat({
+        intervalMs: 30000,
+        progressToken: options.progressToken,
+        server: options.mcpServer
+      })
+    : null;
+
   // Get config path from environment variable
   const configPath = process.env.CONTINUE_CONFIG_PATH;
   if (!configPath) {
@@ -87,6 +99,9 @@ export async function invokeContinue(options: ContinueInvocationOptions): Promis
     shell: true
   });
 
+  // Start heartbeat after spawn
+  heartbeat?.start();
+
   const stdoutChunks: Buffer[] = [];
   const stderrChunks: Buffer[] = [];
 
@@ -115,6 +130,9 @@ export async function invokeContinue(options: ContinueInvocationOptions): Promis
   try {
     closeResult = (await Promise.race([once(child, "close"), timeoutPromise])) as [number | null, NodeJS.Signals | null];
   } finally {
+    // Stop heartbeat
+    heartbeat?.stop();
+
     if (timeoutHandle) {
       clearTimeout(timeoutHandle);
     }

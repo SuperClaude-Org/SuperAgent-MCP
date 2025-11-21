@@ -62,7 +62,9 @@ export async function runCodexBatch(input: BaseInvokeInput): Promise<AgentInvoca
         agentSystemPrompt,
         extraArgs: prompt.extraArgs,
         timeoutMs: prompt.timeoutMs,
-        workingDirectory: prompt.workingDirectory
+        workingDirectory: prompt.workingDirectory,
+        progressToken: (prompt as any).progressToken,
+        mcpServer: (prompt as any).mcpServer
       });
       return {
         status: "ok",
@@ -120,7 +122,9 @@ export async function runGeminiBatch(input: BaseInvokeInput): Promise<AgentInvoc
         prompt: prompt.prompt,
         agentSystemPrompt,
         timeoutMs: prompt.timeoutMs,
-        workingDirectory: prompt.workingDirectory
+        workingDirectory: prompt.workingDirectory,
+        progressToken: (prompt as any).progressToken,
+        mcpServer: (prompt as any).mcpServer
       });
       return {
         status: "ok",
@@ -178,7 +182,9 @@ export async function runContinueBatch(input: BaseInvokeInput): Promise<AgentInv
         prompt: prompt.prompt,
         agentSystemPrompt,
         timeoutMs: prompt.timeoutMs,
-        workingDirectory: prompt.workingDirectory
+        workingDirectory: prompt.workingDirectory,
+        progressToken: (prompt as any).progressToken,
+        mcpServer: (prompt as any).mcpServer
       });
       return {
         status: "ok",

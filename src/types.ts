@@ -69,3 +69,15 @@ export interface AgentInvocationErrorResult {
 }
 
 export type AgentInvocationResult = AgentInvocationSuccess | AgentInvocationErrorResult;
+
+// Heartbeat-related types for progress notifications
+export interface HeartbeatOptions {
+  intervalMs?: number;
+  progressToken?: string | number;
+  server: any;  // MCP Server instance
+}
+
+export interface HeartbeatController {
+  start: () => void;
+  stop: () => void;
+}
