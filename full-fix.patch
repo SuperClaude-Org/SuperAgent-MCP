@@ -1,0 +1,120 @@
+diff --git a/package-lock.json b/package-lock.json
+index 10ff7d4..3870faa 100644
+--- a/package-lock.json
++++ b/package-lock.json
+@@ -10,6 +10,7 @@
+       "hasInstallScript": true,
+       "dependencies": {
+         "@modelcontextprotocol/sdk": "^1.18.0",
++        "cross-spawn": "^7.0.6",
+         "zod": "^3.23.8",
+         "zod-to-json-schema": "^3.23.5"
+       },
+@@ -17,6 +18,7 @@
+         "superagent": "dist/server.js"
+       },
+       "devDependencies": {
++        "@types/cross-spawn": "^6.0.6",
+         "@types/node": "^22.0.0",
+         "ts-node": "^10.9.2",
+         "typescript": "^5.3.3"
+@@ -132,6 +134,15 @@
+       "dev": true,
+       "license": "MIT"
+     },
++    "node_modules/@types/cross-spawn": {
++      "version": "6.0.6",
++      "resolved": "https://registry.npmjs.org/@types/cross-spawn/-/cross-spawn-6.0.6.tgz",
++      "integrity": "sha512-fXRhhUkG4H3TQk5dBhQ7m/JDdSNHKwR2BBia62lhwEIq9xGiQKLxd6LymNhn47SjXhsUEPmxi+PKw2OkW4LLjA==",
++      "dev": true,
++      "dependencies": {
++        "@types/node": "*"
++      }
++    },
+     "node_modules/@types/node": {
+       "version": "22.18.6",
+       "resolved": "https://registry.npmjs.org/@types/node/-/node-22.18.6.tgz",
+@@ -337,7 +348,6 @@
+       "version": "7.0.6",
+       "resolved": "https://registry.npmjs.org/cross-spawn/-/cross-spawn-7.0.6.tgz",
+       "integrity": "sha512-uV2QOWP2nWzsy2aMp8aRibhi9dlzF5Hgh5SHaB9OiTGEyDTiJJyx0uy51QXdyWbtAHNua4XJzUKca3OzKUd3vA==",
+-      "license": "MIT",
+       "dependencies": {
+         "path-key": "^3.1.0",
+         "shebang-command": "^2.0.0",
+diff --git a/package.json b/package.json
+index cb4c59c..9216287 100644
+--- a/package.json
++++ b/package.json
+@@ -1,6 +1,6 @@
+ {
+   "name": "@superclaude-org/superagent",
+-  "version": "0.1.12",
++  "version": "0.1.13",
+   "description": "SuperAgent MCP server for orchestrating Codex agent calls with concurrency",
+   "type": "module",
+   "main": "dist/server.js",
+@@ -20,10 +20,12 @@
+   ],
+   "dependencies": {
+     "@modelcontextprotocol/sdk": "^1.18.0",
++    "cross-spawn": "^7.0.6",
+     "zod": "^3.23.8",
+     "zod-to-json-schema": "^3.23.5"
+   },
+   "devDependencies": {
++    "@types/cross-spawn": "^6.0.6",
+     "@types/node": "^22.0.0",
+     "ts-node": "^10.9.2",
+     "typescript": "^5.3.3"
+diff --git a/src/continueAgent.ts b/src/continueAgent.ts
+index fb6c738..3a4ded0 100644
+--- a/src/continueAgent.ts
++++ b/src/continueAgent.ts
+@@ -1,4 +1,4 @@
+-import { spawn } from "node:child_process";
++import spawn from "cross-spawn";
+ import { once } from "node:events";
+ import { createHeartbeat } from "./heartbeat.js";
+ 
+@@ -82,21 +82,13 @@ export async function invokeContinue(options: ContinueInvocationOptions): Promis
+     (options.agentSystemPrompt ? options.agentSystemPrompt + "\n\nUser request:\n" : "") +
+     options.prompt;
+ 
+-  // Escape special characters in prompt for shell command
+-  const escapedPrompt = fullPrompt
+-    .replace(/\\/g, '\\\\')
+-    .replace(/"/g, '\\"')
+-    .replace(/\n/g, '\\n')
+-    .replace(/\r/g, '\\r');
++  // Build args array for cross-spawn (no shell escaping needed)
++  const args = ["--config", configPath, "-p", fullPrompt];
+ 
+-  // Build command string for shell execution
+-  const command = `cn --config "${configPath}" -p "${escapedPrompt}"`;
+-
+-  const child = spawn(command, [], {
++  const child = spawn("cn", args, {
+     cwd: options.workingDirectory ?? process.cwd(),
+     env: process.env,
+-    stdio: ["pipe", "pipe", "pipe"],
+-    shell: true
++    stdio: ["pipe", "pipe", "pipe"]
+   });
+ 
+   // Start heartbeat after spawn
+@@ -105,11 +97,11 @@ export async function invokeContinue(options: ContinueInvocationOptions): Promis
+   const stdoutChunks: Buffer[] = [];
+   const stderrChunks: Buffer[] = [];
+ 
+-  child.stdout.on("data", (chunk) => stdoutChunks.push(Buffer.from(chunk)));
+-  child.stderr.on("data", (chunk) => stderrChunks.push(Buffer.from(chunk)));
++  child.stdout!.on("data", (chunk) => stdoutChunks.push(Buffer.from(chunk)));
++  child.stderr!.on("data", (chunk) => stderrChunks.push(Buffer.from(chunk)));
+ 
+   // Continue doesn't use stdin for prompts
+-  child.stdin.end();
++  child.stdin!.end();
+ 
+   const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+ 

@@ -1,6 +1,6 @@
 {
   "name": "@superclaude-org/superagent",
-  "version": "0.1.11",
+  "version": "0.1.13",
   "description": "SuperAgent MCP server for orchestrating Codex agent calls with concurrency",
   "type": "module",
   "main": "dist/server.js",
@@ -20,10 +20,12 @@
   ],
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.18.0",
+    "cross-spawn": "^7.0.6",
     "zod": "^3.23.8",
     "zod-to-json-schema": "^3.23.5"
   },
   "devDependencies": {
+    "@types/cross-spawn": "^6.0.6",
     "@types/node": "^22.0.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3"
