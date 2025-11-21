@@ -1,4 +1,4 @@
-import { spawn } from "node:child_process";
+import spawn from "cross-spawn";
 import { once } from "node:events";
 import { createHeartbeat } from "./heartbeat.js";
 
@@ -82,21 +82,18 @@ export async function invokeContinue(options: ContinueInvocationOptions): Promis
     (options.agentSystemPrompt ? options.agentSystemPrompt + "\n\nUser request:\n" : "") +
     options.prompt;
 
-  // Escape special characters in prompt for shell command
+  // Escape newlines for proper prompt transmission
   const escapedPrompt = fullPrompt
-    .replace(/\\/g, '\\\\')
-    .replace(/"/g, '\\"')
     .replace(/\n/g, '\\n')
     .replace(/\r/g, '\\r');
 
-  // Build command string for shell execution
-  const command = `cn --config "${configPath}" -p "${escapedPrompt}"`;
+  // Build args array for cross-spawn
+  const args = ["--config", configPath, "-p", escapedPrompt];
 
-  const child = spawn(command, [], {
+  const child = spawn("cn", args, {
     cwd: options.workingDirectory ?? process.cwd(),
     env: process.env,
-    stdio: ["pipe", "pipe", "pipe"],
-    shell: true
+    stdio: ["pipe", "pipe", "pipe"]
   });
 
   // Start heartbeat after spawn
@@ -105,11 +102,11 @@ export async function invokeContinue(options: ContinueInvocationOptions): Promis
   const stdoutChunks: Buffer[] = [];
   const stderrChunks: Buffer[] = [];
 
-  child.stdout.on("data", (chunk) => stdoutChunks.push(Buffer.from(chunk)));
-  child.stderr.on("data", (chunk) => stderrChunks.push(Buffer.from(chunk)));
+  child.stdout!.on("data", (chunk) => stdoutChunks.push(Buffer.from(chunk)));
+  child.stderr!.on("data", (chunk) => stderrChunks.push(Buffer.from(chunk)));
 
   // Continue doesn't use stdin for prompts
-  child.stdin.end();
+  child.stdin!.end();
 
   const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
 
