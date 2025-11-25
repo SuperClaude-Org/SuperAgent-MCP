@@ -113,18 +113,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   if (toolName === CODEX_TOOL) {
     const parsed = CodexInvokeSchema.parse(args);
 
-    // Inject progressToken and server for heartbeat support
-    const progressToken = Date.now();
-    const enrichedInputs = parsed.inputs.map((input: any) => ({
-      ...input,
-      progressToken,
-      mcpServer: server
-    }));
-
-    const results = await runCodexBatch({
-      ...parsed,
-      inputs: enrichedInputs as any
-    });
+    const results = await runCodexBatch(parsed);
 
     // Format results as clean text
     const resultParts: string[] = [];
@@ -181,18 +170,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   } else if (toolName === GEMINI_TOOL) {
     const parsed = GeminiInvokeSchema.parse(args);
 
-    // Inject progressToken and server for heartbeat support
-    const progressToken = Date.now();
-    const enrichedInputs = parsed.inputs.map((input: any) => ({
-      ...input,
-      progressToken,
-      mcpServer: server
-    }));
-
-    const results = await runGeminiBatch({
-      ...parsed,
-      inputs: enrichedInputs as any
-    });
+    const results = await runGeminiBatch(parsed);
 
     // Format results as clean text
     const resultParts: string[] = [];
@@ -249,18 +227,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   } else if (toolName === CONTINUE_TOOL) {
     const parsed = ContinueInvokeSchema.parse(args);
 
-    // Inject progressToken and server for heartbeat support
-    const progressToken = Date.now();
-    const enrichedInputs = parsed.inputs.map((input: any) => ({
-      ...input,
-      progressToken,
-      mcpServer: server
-    }));
-
-    const results = await runContinueBatch({
-      ...parsed,
-      inputs: enrichedInputs as any
-    });
+    const results = await runContinueBatch(parsed);
 
     // Format results as clean text
     const resultParts: string[] = [];
